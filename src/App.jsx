@@ -7,22 +7,22 @@ import { data } from './Data'
 import './style.css'
 
 function App() {
-  const [notes, setNotes] = useState([])
+  const [notes, setNotes] = useState(
+   () => JSON.parse(localStorage.getItem('notes')) ||[])
   const [currentNoteId, setCurrentNoteId] = useState(
       (notes[0] && notes[0].id) || ""
   )
   
   useEffect(() =>{
-      localStorage.setItem('notes',JSON.stringify(notes))
+    localStorage.setItem('notes',JSON.stringify(notes))
     },[notes])
 
-  useEffect(() => {
-    const savedNotes = JSON.parse(localStorage.getItem('notes'))
 
-    if (savedNotes) {
-      setNotes(savedNotes)
-    }
-  }, [])
+
+  function deleteNote(event, noteId) {
+    event.stopPropagation()
+    console.log("deleted note", noteId)
+  }
 
 
   function createNewNote() {
@@ -35,11 +35,29 @@ function App() {
   }
   
   function updateNote(text) {
-      setNotes(oldNotes => oldNotes.map(oldNote => {
-          return oldNote.id === currentNoteId
-              ? { ...oldNote, body: text }
-              : oldNote
-      }))
+
+    setNotes(oldNotes => {
+        const newArray = []
+
+        for(let i=0; i < oldNotes.length; i++) {
+            const oldNote = oldNotes[i]
+            if(oldNote.id === currentNoteId) {
+                newArray.unshift({ ...oldNote, body: text})
+            } else {
+                newArray.push(oldNote)
+            }
+            
+        }
+        return newArray
+    })
+
+
+    // This does not rearrange the notes
+    //   setNotes(oldNotes => oldNotes.map(oldNote => {
+    //       return oldNote.id === currentNoteId
+    //           ? { ...oldNote, body: text }
+    //           : oldNote
+    //   }))
   }
   
   function findCurrentNote() {
@@ -63,6 +81,7 @@ function App() {
                   currentNote={findCurrentNote()}
                   setCurrentNoteId={setCurrentNoteId}
                   newNote={createNewNote}
+                  deleteNote={deleteNote}
               />
               {
                   currentNoteId && 
